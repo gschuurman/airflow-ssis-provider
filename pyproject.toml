@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "airflow-ssis-provider"
-version = "1.0.1"
+version = "1.0.2"
 authors = [
   { name="Glenn Schuurman", email="info@schuurman-it.com" },
 ]
@@ -23,10 +23,6 @@ dependencies = [
 [tool.hatch.build.targets.wheel]
 packages = ["src/SSIS_Operator"]
 
-
-
 [project.urls]
 Homepage = "https://github.com/gschuurman/airflow-ssis-provider"
-Changelog = "https://github.com/gschuurman/airflow-ssis-provider/releases"
 Issues = "https://github.com/gschuurman/airflow-ssis-provider/issues"
-CI = "https://github.com/gschuurman/airflow-ssis-provider/actions"
