@@ -27,4 +27,6 @@ packages = ["src/SSIS_Operator"]
 
 [project.urls]
 Homepage = "https://github.com/gschuurman/airflow-ssis-provider"
+Changelog = "https://github.com/gschuurman/airflow-ssis-provider/releases"
 Issues = "https://github.com/gschuurman/airflow-ssis-provider/issues"
+CI = "https://github.com/gschuurman/airflow-ssis-provider/actions"
