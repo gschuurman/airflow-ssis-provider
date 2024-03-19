@@ -1,0 +1,30 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "airflow-ssis-provider"
+version = "1.0.0"
+authors = [
+  { name="Glenn Schuurman", email="info@schuurman-it.com" },
+]
+description = "A provider package for Apache Airflow to run SSIS Packages"
+readme = "README.md"
+requires-python = ">=3.8"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License"
+]
+dependencies = [
+    "apache-airflow>=2.8.0",
+    "apache-airflow-providers-microsoft-mssql>=3.6.1"
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/SSIS_Operator"]
+
+
+
+[project.urls]
+Homepage = "https://github.com/gschuurman/airflow-ssis-provider"
+Issues = "https://github.com/gschuurman/airflow-ssis-provider/issues"
