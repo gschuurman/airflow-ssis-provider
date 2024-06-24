@@ -48,7 +48,7 @@ class SsisPackageOperator(BaseOperator):
             folder: str,
             project: str,
             package: str,
-            environment: Optional[str],
+            environment: Optional[str] = None,
             logging_level: LoggingLevel = LoggingLevel.basic,
             parameters: Optional[List[QueryParameters]] = None,
             *args,
