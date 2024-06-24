@@ -119,5 +119,3 @@ class TestSsisPackageOperator(TestCase):
     """,
             operator.sql
         )
-    # def test_execute(self):
-    #     self.fail()
