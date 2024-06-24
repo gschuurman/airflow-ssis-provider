@@ -1,10 +1,6 @@
 from airflow.providers.microsoft.mssql.hooks.mssql import MsSqlHook
 from airflow.sensors.base import BaseSensorOperator
 from airflow.utils.decorators import apply_defaults
-from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from airflow.utils.context import Context
 
 
 class PackageExecutionError(Exception):
@@ -51,7 +47,7 @@ class SsisPackageSensor(BaseSensorOperator):
         self.parameters = parameters
         self.xcom_task_id = xcom_task_id
 
-    def poke(self, context: Context):
+    def poke(self, context):
         hook = MsSqlHook(
             mssql_conn_id=self.conn_id,
             schema=self.database
