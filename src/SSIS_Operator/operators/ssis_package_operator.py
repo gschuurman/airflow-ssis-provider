@@ -33,8 +33,9 @@ class SsisPackageOperator(BaseOperator):
     EXEC [SSISDB].[catalog].[start_execution] @execution_id;
     SELECT @execution_id
     """
-    sql_query_parameter = """DECLARE @{parameter_name} sql_variant = N'{parameter_value}'
-EXEC [SSISDB].[catalog].[set_execution_parameter_value] @execution_id, @object_type={parameter_type}, @parameter_name=N'{parameter_name}', @parameter_value=@{parameter_name}
+    sql_query_parameter = """
+    DECLARE @{parameter_name} sql_variant = N'{parameter_value}'
+    EXEC [SSISDB].[catalog].[set_execution_parameter_value] @execution_id, @object_type={parameter_type}, @parameter_name=N'{parameter_name}', @parameter_value=@{parameter_name}
 """
 
     @apply_defaults
@@ -62,6 +63,7 @@ EXEC [SSISDB].[catalog].[set_execution_parameter_value] @execution_id, @object_t
         self.logging_level = logging_level
         if parameters:
             self.__build_query_parameters(parameters=parameters)
+        self.__build_sql_query()
 
     def __build_query_parameters(self, parameters: list[QueryParameters]):
         for parameter in parameters:
@@ -71,13 +73,8 @@ EXEC [SSISDB].[catalog].[set_execution_parameter_value] @execution_id, @object_t
                 parameter_type=parameter.type.value
             )
 
-    def execute(self, context):
-        sqlserver_hook = MsSqlHook(
-            mssql_conn_id=self.conn_id,
-            schema=self.database
-        )
-
-        sql = SsisPackageOperator.sql_query.format(
+    def __build_sql_query(self):
+        self.sql = SsisPackageOperator.sql_query.format(
             folder=self.folder,
             project=self.project,
             package=self.package,
@@ -86,9 +83,15 @@ EXEC [SSISDB].[catalog].[set_execution_parameter_value] @execution_id, @object_t
             logging_level=self.logging_level.value
         )
 
-        self.log.info(f"Running package using SQL: \n {sql}")
+    def execute(self, context):
+        sqlserver_hook = MsSqlHook(
+            mssql_conn_id=self.conn_id,
+            schema=self.database
+        )
 
-        result = sqlserver_hook.get_first(sql)
+        self.log.info(f"Running package using SQL: \n {self.sql}")
+
+        result = sqlserver_hook.get_first(self.sql)
 
         if not result or len(result) < 1:
             self.log.info(result)
