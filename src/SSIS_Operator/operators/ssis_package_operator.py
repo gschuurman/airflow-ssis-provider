@@ -20,7 +20,7 @@ class SsisPackageOperator(BaseOperator):
     
     {sql_parameters}
     
-    DECLARE @LoggingLevel sql_variant = N'{logging_level}'  
+    DECLARE @LoggingLevel sql_variant = {logging_level}  
     EXEC [SSISDB].[catalog].[set_execution_parameter_value] @execution_id, @object_type=50, @parameter_name=N'LOGGING_LEVEL', @parameter_value=@LoggingLevel;
        
     EXEC [SSISDB].[catalog].[start_execution] @execution_id;
