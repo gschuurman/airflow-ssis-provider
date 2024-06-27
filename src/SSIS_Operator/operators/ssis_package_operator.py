@@ -26,10 +26,12 @@ class SsisPackageOperator(BaseOperator):
     EXEC [SSISDB].[catalog].[start_execution] @execution_id;
     SELECT @execution_id
     """
+
     sql_query_parameter = """
     DECLARE @{parameter_name} sql_variant = N'{parameter_value}'
     EXEC [SSISDB].[catalog].[set_execution_parameter_value] @execution_id, @object_type={parameter_type}, @parameter_name=N'{parameter_name}', @parameter_value=@{parameter_name}
 """
+
     sql_query_reference = """DECLARE @reference_id BIGINT = (SELECT er.[reference_id]
             FROM [SSISDB].[catalog].[environment_references] er
             LEFT JOIN [SSISDB].[catalog].[projects] p ON er.project_id = p.project_id
@@ -74,8 +76,8 @@ class SsisPackageOperator(BaseOperator):
     def __build_query_parameters(self, parameters: list[QueryParameters]):
         for parameter in parameters:
             self.sql_parameters += SsisPackageOperator.sql_query_parameter.format(
-                parameter_name=parameter.name,
-                parameter_value=parameter.value,
+                parameter_name=parameter.name.replace("'", "''"),
+                parameter_value=parameter.value.replace("'", "''"),
                 parameter_type=parameter.type.value
             )
 
