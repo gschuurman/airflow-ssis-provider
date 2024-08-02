@@ -91,7 +91,7 @@ class SsisPackageSensor(BaseSensorOperator):
                 value=records[1]
             )
 
-        if records[0] in ("Failure",):
+        if records[0] in ("Failure", 'Canceled'):
             raise PackageExecutionError(
                 message="Package execution ended abnormally",
                 package_name=records[1],
