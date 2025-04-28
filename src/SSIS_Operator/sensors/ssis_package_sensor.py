@@ -78,13 +78,11 @@ class SsisPackageSensor(BaseSensorOperator):
         )
 
         if termination_flag:
-            self.xcom_push(
-                context=context,
+            context["ti"].xcom_push(
                 key="execution_status",
                 value=records[0],
             )
-            self.xcom_push(
-                context=context,
+            context["ti"].xcom_push(
                 key="package_name",
                 value=records[1]
             )
