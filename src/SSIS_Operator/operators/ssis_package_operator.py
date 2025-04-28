@@ -111,8 +111,7 @@ class SsisPackageOperator(BaseOperator):
             self.log.info(result)
             raise ValueError("No execution ID was returned")
 
-        self.xcom_push(
-            context=context,
+        context["ti"].xcom_push(
             key="execution_id",
             value=result[0]
         )
