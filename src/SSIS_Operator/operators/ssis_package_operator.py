@@ -1,10 +1,8 @@
 from typing import Optional, List
 
-from airflow.models import BaseOperator
-from airflow.providers.microsoft.mssql.hooks.mssql import MsSqlHook
-from airflow.utils.decorators import apply_defaults
-
 from SSIS_Operator.models.SqlQueryParameters import QueryParameters, LoggingLevel
+from airflow.providers.microsoft.mssql.hooks.mssql import MsSqlHook
+from airflow.sdk import BaseOperator
 
 
 class SsisPackageOperator(BaseOperator):
@@ -42,7 +40,6 @@ class SsisPackageOperator(BaseOperator):
 
     sql_reference_parameter = ""
 
-    @apply_defaults
     def __init__(
             self,
             conn_id,
@@ -70,7 +67,7 @@ class SsisPackageOperator(BaseOperator):
             self.__build_query_parameters(parameters=parameters)
         if environment:
             self.__build_query_reference()
-            self.sql_reference_parameter = f"\n{' '*8},@reference_id = @reference_id"
+            self.sql_reference_parameter = f"\n{' ' * 8},@reference_id = @reference_id"
         self.__build_sql_query()
 
     def __build_query_parameters(self, parameters: list[QueryParameters]):
