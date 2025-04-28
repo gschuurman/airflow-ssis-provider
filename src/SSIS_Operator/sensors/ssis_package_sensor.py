@@ -1,6 +1,5 @@
 from airflow.providers.microsoft.mssql.hooks.mssql import MsSqlHook
-from airflow.sensors.base import BaseSensorOperator
-from airflow.utils.decorators import apply_defaults
+from airflow.sdk import BaseSensorOperator
 
 
 class PackageExecutionError(Exception):
@@ -15,23 +14,22 @@ class PackageExecutionError(Exception):
 
 class SsisPackageSensor(BaseSensorOperator):
     sql_query = """
-    SELECT CASE
-        WHEN status = 1 THEN 'Created'
-        WHEN status = 2 THEN 'Running'
-        WHEN status = 3 THEN 'Canceled'
-        WHEN status IN ( 4, 6 ) THEN 'Failure'
-        WHEN status = 5 THEN 'Pending'
-        WHEN status = 7 THEN 'Success'
-        WHEN status = 8 THEN 'Stopping'
-        WHEN status = 9 THEN 'Completed'
-        ELSE 'Failure' END AS [status_desc],
+                SELECT CASE
+                           WHEN status = 1 THEN 'Created'
+                           WHEN status = 2 THEN 'Running'
+                           WHEN status = 3 THEN 'Canceled'
+                           WHEN status IN (4, 6) THEN 'Failure'
+                           WHEN status = 5 THEN 'Pending'
+                           WHEN status = 7 THEN 'Success'
+                           WHEN status = 8 THEN 'Stopping'
+                           WHEN status = 9 THEN 'Completed'
+                           ELSE 'Failure' END AS [status_desc],
             package_name
-    FROM SSISDB.catalog.executions
-    WHERE execution_id = {execution_id}
-    ORDER BY created_time DESC
-    """
+                FROM SSISDB.catalog.executions
+                WHERE execution_id = {execution_id}
+                ORDER BY created_time DESC \
+                """
 
-    @apply_defaults
     def __init__(
             self,
             conn_id,
