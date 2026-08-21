@@ -1,3 +1,5 @@
+"""Operator that starts an SSIS Catalog package execution over an MSSQL connection."""
+
 from typing import Optional, List
 
 from SSIS_Operator.models.SqlQueryParameters import QueryParameters, LoggingLevel
@@ -6,6 +8,30 @@ from airflow.sdk import BaseOperator
 
 
 class SsisPackageOperator(BaseOperator):
+    """Starts an SSIS Catalog package execution and pushes its execution ID to XCom.
+
+    Builds a `[SSISDB].[catalog]` T-SQL script that creates and starts the
+    execution, optionally binding an environment reference and setting
+    project/package/logging parameters, then runs it via `MsSqlHook`. The
+    resulting `execution_id` is pushed to XCom under the `execution_id` key
+    so a downstream `SsisPackageSensor` can poll it.
+
+    Example::
+
+        SsisPackageOperator(
+            task_id="run_etl_package",
+            conn_id="ssisdb_default",
+            database="SSISDB",
+            folder="MyFolder",
+            project="MyProject",
+            package="LoadOrders.dtsx",
+            environment="Production",
+            logging_level=LoggingLevel.basic,
+            parameters=[
+                QueryParameters(name="BatchDate", value="2026-08-21", type=ParameterType.PACKAGE),
+            ],
+        )
+    """
     sql_query = """
     DECLARE @execution_id BIGINT
     {reference_query}
@@ -53,6 +79,20 @@ class SsisPackageOperator(BaseOperator):
             *args,
             **kwargs
     ):
+        """Initialize the operator and pre-build the SSIS Catalog execution SQL.
+
+        Args:
+            conn_id: Airflow connection ID for the target MSSQL server hosting SSISDB.
+            database: Database name to connect to (typically `SSISDB`).
+            folder: SSIS Catalog folder containing the project.
+            project: SSIS Catalog project name.
+            package: Package file name within the project, e.g. `LoadOrders.dtsx`.
+            environment: Optional SSIS Catalog environment name to bind as a reference.
+            logging_level: `LoggingLevel` to set for the execution. Defaults to `LoggingLevel.basic`.
+            parameters: Optional list of `QueryParameters` to set before starting the execution.
+            *args: Additional positional arguments passed to `BaseOperator`.
+            **kwargs: Additional keyword arguments passed to `BaseOperator`.
+        """
         super(SsisPackageOperator, self).__init__(*args, **kwargs)
         self.conn_id = conn_id
         self.database = database
@@ -71,6 +111,7 @@ class SsisPackageOperator(BaseOperator):
         self.__build_sql_query()
 
     def __build_query_parameters(self, parameters: list[QueryParameters]):
+        """Append one `set_execution_parameter_value` statement per parameter to `self.sql_parameters`."""
         for parameter in parameters:
             self.sql_parameters += SsisPackageOperator.sql_query_parameter.format(
                 parameter_name=parameter.name.replace("'", "''"),
@@ -79,6 +120,7 @@ class SsisPackageOperator(BaseOperator):
             )
 
     def __build_query_reference(self):
+        """Build the `@reference_id` lookup subquery for the configured environment."""
         self.sql_reference_query = SsisPackageOperator.sql_query_reference.format(
             folder=self.folder,
             project=self.project,
@@ -86,6 +128,7 @@ class SsisPackageOperator(BaseOperator):
         )
 
     def __build_sql_query(self):
+        """Assemble the final `create_execution`/`start_execution` script into `self.sql`."""
         self.sql = SsisPackageOperator.sql_query.format(
             folder=self.folder,
             project=self.project,
@@ -98,6 +141,14 @@ class SsisPackageOperator(BaseOperator):
         )
 
     def execute(self, context):
+        """Start the SSIS package execution and push its `execution_id` to XCom.
+
+        Args:
+            context: Airflow task instance context.
+
+        Raises:
+            ValueError: If the SSIS Catalog query returns no execution ID.
+        """
         sqlserver_hook = MsSqlHook(
             mssql_conn_id=self.conn_id,
             schema=self.database
